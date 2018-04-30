@@ -11,10 +11,14 @@ fn example() -> Result<(), Box<Error>> {
         (version: crate_version!())
         (author: "Aaron P. <theaaronepower@gmail.com> + Contributors")
         (about: crate_description!())
+        (@arg title: -t --title
+            +takes_value
+            "Pick header column to be title size('h1').")
         (@arg input: ...  "The file to be parsed.")
     ).get_matches();
 
     let path = matches.value_of("input").unwrap();
+    let title = matches.value_of("title");
     // Build the CSV reader and iterate over each record.
     let records = csv::Reader::from_path(path)?.into_records();
     let headers = csv::Reader::from_path(path)?.headers()?.clone();
@@ -22,8 +26,13 @@ fn example() -> Result<(), Box<Error>> {
     for result in records {
         let record = result?;
         for (header, value) in headers.iter().zip(record.iter()) {
-            println!("##### {}", header);
-            println!("{}", value);
+            match title {
+                Some(title) if title == header => println!("# {}", value),
+                _ => {
+                    println!("##### {}", header);
+                    println!("{}", value);
+                }
+            }
         }
     }
 
